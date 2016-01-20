@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="center">
+
+
+    <a href="/" id="home">Home<br></a>
+    <a href="/pagemainred" id="home">Start a new action<br></a>
+    <a href="/logout" id="logout">Log out<br></a>
+
+    <p class='circle-image'
+       style="background-image: url(https://graph.facebook.com/{{ session['page']['id'] }}/picture?type=large);
+              margin-left: auto; margin-right: auto;">
+    </p>
+    <h3>Managing {{ session['page']['name'] }}.</h3>
+
+    <h5> Please Enter the text for your new post </h5>
+    
+    <form action="input_post" method = "post">
+    <textarea name="message" cols="40" rows="5" ... ></textarea>
+      <br><br>
+      <input type="submit" name="submit" value="Post">
+    </form> 
+
+    <h5> 
+        <a> Please note this will be </a>
+        {% if not session['visibility']%}
+            <a> an Unpublished post </a>
+        {% else %}
+            <a> a Published post </a>
+        {% endif %}
+    </h5>
+        <br><br>
+
+
+
+    <script>
+        document.getElementById('logout').onclick = function() {
+            FB.logout(function(response) { });
+        };
+    </script>
+
+</div>
+{% endblock %}

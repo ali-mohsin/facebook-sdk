@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="center">
+    <a href="/" id="home">Home<br></a>
+    <a href="/pagemainred" id="home">Start a new action<br></a>
+    <a href="/logout" id="logout">Log out<br></a>
+
+
+    <p class='circle-image'
+       style="background-image: url(https://graph.facebook.com/{{ session['page']['id'] }}/picture?type=large);
+              margin-left: auto; margin-right: auto;">
+    </p>
+    <h3>Managing {{ session['page']['name'] }}.</h3>
+
+    {% if posts != None%}
+    <h5> Here's a list of your posts </h5>
+    {% for post in posts %}
+        <a> {{post['text']}} <br> Views: {{ post['views']}}<br><br></a>
+        <br>
+    {% endfor %}
+    {% endif%}
+    </form>
+
+{% if (next != None) %}
+<form action="rendernext" method="post">
+  <button type="submit" value={{next}} name="next">Next</button><br>
+</form>
+{%endif%}
+
+{% if (next == None) %}
+    <h5> No more posts to show </h5>
+
+{%endif%}
+
+    <br><br>
+
+
+    <script>
+        document.getElementById('logout').onclick = function() {
+            FB.logout(function(response) { });
+        };
+    </script>
+
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="center">
+    <h3>Facebook Page Manager</h3>
+    <h4> Please Sign in</h4>
+
+ 
+	<fb:login-button data-scope="read_insights,public_profile,publish_pages,manage_pages,pages_show_list,publish_actions" onlogin="checkLoginState();">
+	</fb:login-button>
+    </div>
+</div>
+{% endblock %}
