@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="center">
+    <a href="/" id="home">Home<br></a>
+    <a href="/pagemainred" id="home">Start a new action<br></a>
+    <a href="/logout" id="logout">Log out<br></a>
+
+
+    <p class='circle-image'
+       style="background-image: url(https://graph.facebook.com/{{ session['page']['id'] }}/picture?type=large);
+              margin-left: auto; margin-right: auto;">
+    </p>
+    <h3>Managing {{ session['page']['name'] }}.</h3>
+
+    <h5> You have successfully posted to {{session['page']['name']}} your Post ID is {{post_id}}</h5>
+
+    <script>
+        document.getElementById('logout').onclick = function() {
+            FB.logout(function(response) { });
+        };
+    </script>
+
+    <br><br>
+
+
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="center">
+
+    <p class='circle-image'
+       style="background-image: url(https://graph.facebook.com/{{ user['id'] }}/picture?type=large);
+              margin-left: auto; margin-right: auto;">
+    </p>
+    <h3>Hello, {{ user['name'] }}.</h3>
+
+    <h5> Here is the list of your pages, choose one </h5>
+
+    <form action="/pagemain" method="post">
+    {% for page in pages %}
+        <input type="radio" value={{ page['id']}} name="page"> {{ page['name']}}</input>
+        <br>
+    {% endfor %}
+      <input type="submit">
+    </form>
+
+    <br><br>
+
+    <a href="/" id="home">Home<br></a>
+    <a href="/logout" id="logout">Log out<br></a>
+    <script>
+        document.getElementById('logout').onclick = function() {
+            FB.logout(function(response) { });
+        };
+    </script>
+
+</div>
+{% endblock %}

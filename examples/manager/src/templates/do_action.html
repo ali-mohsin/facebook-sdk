@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<div class="center">
+
+
+    <p class='circle-image'
+       style="background-image: url(https://graph.facebook.com/{{ session['page']['id'] }}/picture?type=large);
+              margin-left: auto; margin-right: auto;">
+    </p>
+    <h3>Managing {{ session['page']['name'] }}.</h3>
+
+    <h5> What would you like to do to with {{session['page']['name']}}</h5>
+
+    <form action="/renderresult" method="post">
+        <input type="radio" value="list" name="action"> List all posts <br></input>
+        <input type="radio" value="add" name="action"> Add a new Post <br></input>
+
+        <h5> Select the type of posts you would like to read / post </h5>
+        <input type="radio" value="pub" name="vis"> Published <br></input>
+        <input type="radio" value="unpub" name="vis"> Unpublished <br></input>
+
+        <input type="submit">
+    </form>
+
+    <br><br>
+
+
+    <a href="/" id="home">Home<br></a>
+    <a href="/logout" id="logout">Log out<br></a>
+    
+    <script>
+        document.getElementById('logout').onclick = function() {
+            FB.logout(function(response) { });
+        };
+    </script>
+
+</div>
+{% endblock %}
