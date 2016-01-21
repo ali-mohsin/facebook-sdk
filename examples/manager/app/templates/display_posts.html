@@ -21,16 +21,15 @@
     {% endif%}
     </form>
 
-{% if (next != None) %}
-<form action="rendernext" method="post">
-  <button type="submit" value={{next}} name="next">Next</button><br>
-</form>
-{%endif%}
+    {% if (next != None) %}
+    <form action="rendernext" method="post">
+      <button type="submit" value={{next}} name="next">Next</button><br>
+    </form>
+    {%endif%}
 
-{% if (data['next'] == None) %}
-    <h5> No more posts to show </h5>
-
-{%endif%}
+    {% if (data['next'] == None) %}
+        <h5> No more posts to show </h5>
+    {%endif%}
 
     <br><br>
 

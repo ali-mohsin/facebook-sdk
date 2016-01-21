@@ -27,7 +27,7 @@ def id_to_page(id, graph):
 def post_message(msg, page_token, is_visible):
     """ Push a post as the page
 
-    Use published attribute to distinguish in (Un)published posts
+    Use published attribute to distinguish between (Un)published posts
     """
 
     graph = GraphAPI(page_token)
@@ -100,6 +100,6 @@ def get_views(id, graph, res, ind):
     The response is the parsed and only the view count is returned
     """
 
-    resp = graph.get_connections(id, "insights/post_impressions")
+    resp = graph.get_connections(id, "insights/post_impressions_unique")
     count = resp['data'][0]['values'][0]['value']
     res[ind] = count

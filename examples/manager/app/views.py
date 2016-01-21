@@ -21,6 +21,7 @@ def page_main():
     function id_to_page.
  
     """
+    
     cur_page = request.form['page']
     session['page'] = utils.id_to_page(cur_page,g.graph)
     return render_template('do_action.html')
