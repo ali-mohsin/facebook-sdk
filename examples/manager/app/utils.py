@@ -1,68 +1,65 @@
 from facebook import get_user_from_cookie, GraphAPI
 from threading import Thread
 
-import requests
 
-def id2page(iden,token):
-    graph = GraphAPI(token)
+def get_pages(graph):
+    accounts = graph.get_object('me/accounts')
+    return accounts['data']
+
+
+def id_to_page(id, graph):
     pages = graph.get_object('me/accounts')
     for page in pages['data']:
-        if iden == page['id']:
+        if id == page['id']:
             return page
 
 
-def post_message(msg,session):
-    graph = GraphAPI(session['page']['access_token'])
-    att = {}
-    att['published'] = session['visibility']
+def post_message(msg, page_token, is_visible):
+    graph = GraphAPI(page_token)
+    att = {'published' : is_visible}
     return graph.put_wall_post(msg,attachment=att);
 
-def getposts(is_published,token,session):
-    graph = GraphAPI(token)
-    args={}
-    args['access_token'] = token
-    args['is_published'] = is_published
-    feed = requests.request("GET", "https://graph.facebook.com/" + session['page']['id'] + "/promotable_posts",params=args).json()
-    return posts_from_one_page(feed,graph,token)
+def get_posts(graph, is_published, id):
+    args = {'is_published' : is_published}
+    feed = graph.request(id+"/promotable_posts",args = args)
+#    get_connections(id, 'promotable_posts', args = args)
+    return posts_from_one_page(feed,graph)
     
-def posts_from_one_page(feed,graph,token):
-    ret = {}
+def posts_from_one_page(feed,graph): #TODO
+    MAX_THREADS = 25
     posts = []
-    views = [None]*25
-    ret['next'] = None
-    ret['posts'] = None
-    threads = []
+    pending = []
+    views = [None]*MAX_THREADS 
     index = 0
-    try:
+    ret = {}
+    try: 
         for post in feed['data']:
-            cur = {}
-            if 'message' in post:
-                cur['text'] = post['message']
-            elif 'story' in post:
-                cur['text'] = post['story']
-
-            thread = Thread(target = get_views,args=(post['id'],graph,views,index,token))
-            thread.start()
+            text = post['message'] if 'message' in post else post['story']
+            posts.append(text)
+            view_request = Thread(target = get_views, args = (post['id'], graph, views, index))
+            view_request.start()
+            pending.append(view_request)
             index+=1
-            threads.append(thread)
-            # cur['views'] = get_views(post['id'],graph)
-            posts.append(cur)
+        wait_for(pending)
+        ret = {
+            'posts' : posts,
+            'views' : views,
+            'next' : feed['paging']['next']   
+        }
 
-        for t in threads:
-            t.join()
-
-        for i in range (0,index):
-            posts[i]['views'] = views[i]
-
-        ret['next'] = feed['paging']['next'];
-        ret['posts'] = posts
     except KeyError:
-        return ret
+        return {'posts' : None, 'views': None, 'next': None}
+
+   
+ 
     return ret
 
-def get_views(id,graph,res,ind,token): # TODO: Change API for this
-    args={}
-    args['access_token'] = token
-    ans = requests.request("GET", "https://graph.facebook.com/" + id + "/insights/post_impressions",params=args).json()['data'][0]['values'][0]['value']#/post_impressions_unique")
-    res[ind] = ans
-    print res[ind]
+
+def wait_for(pending):
+    for req in pending:
+        req.join()
+
+def get_views(id, graph, res, ind): 
+    resp = graph.get_connections(id, "insights/post_impressions")
+    count = resp['data'][0]['values'][0]['value']
+    res[ind] = count

@@ -17,62 +17,56 @@ def index():
     # If a user was set in the get_current_user function before the request,
     # the user is logged in.
 
-    if g.user != None:
+    if g.user:
         return render_template('index.html', app_id=FB_APP_ID,
                                app_name=FB_APP_NAME, user=g.user)
     # Otherwise, a user is not logged in.
     return render_template('login.html', app_id=FB_APP_ID, name=FB_APP_NAME)
 
-    
+
 @app.route('/pagemain',methods=['POST'])
-def pagemain():
-    session['page'] = utils.id2page(request.form['page'],g.user['access_token'])
-    return render_template('do_action.html', user = g.user)
+def page_main():
+    cur_page = request.form['page']
+    session['page'] = utils.id_to_page(cur_page,g.graph)
+    return render_template('do_action.html')
 
 @app.route('/input_post',methods=['POST'])
-def input_post():
+def input_post(): #TODO, error handling for privacy checks
     message = request.form['message']
-    resp = utils.post_message(message,session)
-    return render_template('success.html', user = g.user, post_id = resp['id'])
+    page_token = session['page']['access_token']
+    resp = utils.post_message(message, page_token, session['visibility'])
+    return render_template('success.html', post_id = resp['id'])
 
 @app.route('/renderresult',methods=['POST'])
-def renderresult():
+def render_result():
     action = request.form['action']
     session['visibility'] = request.form['vis'] == 'pub'
     if(action == 'list'):
-        resp = utils.getposts(session['visibility'],g.user['access_token'],session)
-        return render_template('display_posts.html', user = g.user, posts = resp['posts'], next = resp['next'])
+        resp = utils.get_posts(g.graph,session['visibility'],session['page']['id'])
+        return render_template('display_posts.html', data = resp, next = resp['next'])
     elif (action == 'add'): 
-        return render_template('input_post.html', user = g.user)
+        return render_template('input_post.html')
     else:
-        return redirect(url_for('pagemain'))
+        return redirect(url_for('error')) #TODO: add this page
 
 @app.route('/rendernext',methods = ['POST'])
 def rendernext():
-    token = g.user['access_token']
-    graph = GraphAPI(token)
-
     url = request.form['next']
     feed = requests.get(url).json()
-    resp = utils.posts_from_one_page(feed,graph,token);
-    return render_template('display_posts.html', user = g.user, posts = resp['posts'], next = resp['next'])
-
+    resp = utils.posts_from_one_page(feed,g.graph)
+    return render_template('display_posts.html', data = resp, next = resp['next'])
 
 @app.route('/pagemainred')
 def pagemainred():
-    return render_template('do_action.html', user = g.user)
+    return render_template('do_action.html')
 
 
 @app.route('/displaypages')
-def displaypages():
-    pages = getpages()['data']
+def display_pages():
+    pages = utils.get_pages(g.graph)
     return render_template('display.html', app_id=FB_APP_ID,app_name=FB_APP_NAME, user=g.user, pages = pages)
 
 
-def getpages():
-    graph = GraphAPI(g.user['access_token'])
-    accounts = graph.get_object('me/accounts')
-    return accounts
 
 
 @app.route('/logout')
@@ -84,6 +78,9 @@ def logout():
     by the JavaScript SDK.
     """
     session.pop('user', None)
+    session.pop('page', None)
+    session.pop('visibility', None)
+
     return redirect(url_for('index'))
 
 
@@ -104,6 +101,7 @@ def get_current_user():
     # of this function early.
     if session.get('user'):
         g.user = session.get('user')
+        g.graph = GraphAPI(g.user['access_token'])
         return
 
     # Attempt to get the short term access token for the current user.
@@ -118,6 +116,7 @@ def get_current_user():
         if not user:
             # Not an existing user so get info
             graph = GraphAPI(result['access_token'])
+            g.graph = graph
             profile = graph.get_object('me')
             if 'link' not in profile:
                 profile['link'] = ""
