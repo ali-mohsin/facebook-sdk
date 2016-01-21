@@ -12,26 +12,27 @@ FB_APP_NAME = 'pagemanagerinterview'
 FB_APP_SECRET = '1f8fa38915fcfa581abf238821fa07a1'
 
 
-@app.route('/')
-def index():
-    # If a user was set in the get_current_user function before the request,
-    # the user is logged in.
-
-    if g.user:
-        return render_template('index.html', app_id=FB_APP_ID,
-                               app_name=FB_APP_NAME, user=g.user)
-    # Otherwise, a user is not logged in.
-    return render_template('login.html', app_id=FB_APP_ID, name=FB_APP_NAME)
-
 
 @app.route('/pagemain',methods=['POST'])
 def page_main():
+    """ Show all the possible actions a user can do
+
+    Take the page id from the form and convert into page using helper
+    function id_to_page.
+ 
+    """
     cur_page = request.form['page']
     session['page'] = utils.id_to_page(cur_page,g.graph)
     return render_template('do_action.html')
 
 @app.route('/input_post',methods=['POST'])
 def input_post(): #TODO, error handling for privacy checks
+    """ Write a post to the current page.
+
+    Assumes the post should be written by the page (NOT by the user)
+    visibility field identifies if this is a published or unpublished post
+    """
+
     message = request.form['message']
     page_token = session['page']['access_token']
     resp = utils.post_message(message, page_token, session['visibility'])
@@ -39,6 +40,14 @@ def input_post(): #TODO, error handling for privacy checks
 
 @app.route('/renderresult',methods=['POST'])
 def render_result():
+    """ Redirects to respective pages according to the action chosen by user
+
+    First page of posts are fetched using the utils method get_posts. Views and Text is passed
+    onto html for display.
+
+    For add, redirected to an html page to input text.
+    """
+
     action = request.form['action']
     session['visibility'] = request.form['vis'] == 'pub'
     if(action == 'list'):
@@ -51,6 +60,12 @@ def render_result():
 
 @app.route('/rendernext',methods = ['POST'])
 def rendernext():
+    """ Fetches the corresponding page for displaying posts.
+
+    "Next" field identifies the url for next page. Simple Json request
+    fetches the page and forwards the result tp html
+    """
+
     url = request.form['next']
     feed = requests.get(url).json()
     resp = utils.posts_from_one_page(feed,g.graph)
@@ -58,14 +73,31 @@ def rendernext():
 
 @app.route('/pagemainred')
 def pagemainred():
+    """ Page to redirect to actions page
+    """
     return render_template('do_action.html')
 
 
 @app.route('/displaypages')
 def display_pages():
+    """ Show options of all the pages a user manages
+    """
     pages = utils.get_pages(g.graph)
     return render_template('display.html', app_id=FB_APP_ID,app_name=FB_APP_NAME, user=g.user, pages = pages)
 
+
+#################### BOILER PLATE CODE STARTS HERE ###################
+
+@app.route('/')
+def index():
+    # If a user was set in the get_current_user function before the request,
+    # the user is logged in.
+
+    if g.user:
+        return render_template('index.html', app_id=FB_APP_ID,
+                               app_name=FB_APP_NAME, user=g.user)
+    # Otherwise, a user is not logged in.
+    return render_template('login.html', app_id=FB_APP_ID, name=FB_APP_NAME)
 
 
 
@@ -78,9 +110,8 @@ def logout():
     by the JavaScript SDK.
     """
     session.pop('user', None)
-    session.pop('page', None)
-    session.pop('visibility', None)
-
+#    g.user = None
+#    g.graph = None
     return redirect(url_for('index'))
 
 
